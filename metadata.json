@@ -1,0 +1,7 @@
+{
+  "name": "UPS Driving Habits Memorizer",
+  "description": "An interactive drag-and-drop application to help UPS drivers memorize the 5 Seeing Habits and the 10 Point Commentary by grouping related statements.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
