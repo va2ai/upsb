@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Topic, UserPerformanceData, BlankQuestion } from '../types';
 import { CompletionScreen } from './CompletionScreen';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -19,9 +19,6 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
   const [correctness, setCorrectness] = useState<boolean[]>([]); // To track correctness of each blank
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const firstBlankInputRef = useRef<HTMLInputElement>(null); // Ref for the first blank input
-  const nextButtonRef = useRef<HTMLButtonElement>(null); // Ref for the "Next" button
 
   const currentQuestion = useMemo(() => questions[currentQuestionIndex], [questions, currentQuestionIndex]);
 
@@ -67,7 +64,9 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
                   blankedWords: { type: Type.ARRAY, items: { type: Type.STRING } },
                 },
                 required: ["blankedPhrase", "blankedWords"],
+                propertyOrdering: ["blankedPhrase", "blankedWords"],
               },
+              thinkingConfig: { thinkingBudget: 0 } // For quicker responses
             },
           });
 
@@ -118,18 +117,8 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
       setUserInputs(Array(numBlanks).fill(''));
       setIsSubmitted(false);
       setCorrectness([]);
-      
-      // Auto-focus the first blank input when a new question loads
-      firstBlankInputRef.current?.focus();
     }
   }, [currentQuestion]);
-
-  // Effect to focus the "Next" button when all answers are correct
-  useEffect(() => {
-    if (isSubmitted && correctness.every(Boolean) && nextButtonRef.current) {
-      nextButtonRef.current.focus();
-    }
-  }, [isSubmitted, correctness]);
 
   const handleInputChange = (blankIndex: number, value: string) => {
     const newInputs = [...userInputs];
@@ -137,10 +126,8 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
     setUserInputs(newInputs);
   };
 
-  const allInputsFilled = useMemo(() => userInputs.every(input => input.trim() !== ''), [userInputs]);
-
-  const checkAnswer = useCallback(() => {
-    if (!currentQuestion || !allInputsFilled) return; // Prevent checking empty answers
+  const checkAnswer = () => {
+    if (!currentQuestion || userInputs.some(input => input.trim() === '')) return; // Prevent checking empty answers
 
     const newCorrectness: boolean[] = [];
     const failedWordsForPerformance: string[] = [];
@@ -163,29 +150,16 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
     if (failedWordsForPerformance.length > 0) {
         updatePhrasePerformance(currentQuestion.topicId, currentQuestion.originalPhrase, failedWordsForPerformance);
     }
-  }, [currentQuestion, userInputs, allInputsFilled]);
+  };
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       // Game over
       setCurrentQuestionIndex(questions.length); // Indicate completion
     }
-  }, [currentQuestionIndex, questions.length]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent default form submission or new line in textarea if it were one
-      if (isSubmitted) {
-        // If already submitted, and 'Enter' is pressed, proceed to next question
-        handleNext();
-      } else if (allInputsFilled) {
-        // If all inputs filled and not submitted, check answer
-        checkAnswer();
-      }
-    }
-  }, [isSubmitted, allInputsFilled, checkAnswer, handleNext]);
+  };
 
   if (loadingQuestions || questions.length === 0) {
     return (
@@ -209,6 +183,9 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
     return <CompletionScreen onReset={onReset} message="You've completed the fill-in-the-blank challenge!" />;
   }
   
+  // Determine if all input fields are filled to enable 'Check Answer' button
+  const allInputsFilled = userInputs.every(input => input.trim() !== '');
+
   let blankInputCounter = 0; // To correctly map userInputs to the right blank
 
   return (
@@ -231,11 +208,9 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
               return (
                 <input
                   key={`blank-${currentQuestion.id}-${blankIdx}`} // Unique key for input
-                  ref={blankIdx === 0 ? firstBlankInputRef : null} // Assign ref only to the first blank
                   type="text"
                   value={userInputs[blankIdx] || ''} // Ensure value is defined
                   onChange={(e) => handleInputChange(blankIdx, e.target.value)}
-                  onKeyDown={handleKeyDown} // Add onKeyDown handler
                   disabled={isSubmitted}
                   className={`flex-grow min-w-[80px] max-w-[200px] p-2 border-b-2 text-center text-gray-800 dark:text-gray-100
                     ${isSubmitted
@@ -276,7 +251,6 @@ export const FillInTheBlankGame: React.FC<GameProps> = ({ topics, onReset }) => 
           </button>
         ) : (
           <button
-            ref={nextButtonRef} {/* Assign the ref to the Next button */}
             onClick={handleNext}
             className="bg-green-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-green-700 transition-transform transform hover:scale-105"
           >

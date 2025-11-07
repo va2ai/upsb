@@ -103,7 +103,7 @@ const App: React.FC = () => {
                 </svg>
               ) : (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-700">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0112 21.75c-3.617 0-6.945-1.428-9.397-3.75a.75.75 0 00-1.04.094A7.534 7.534 0 0012 22.5c2.75 0 5.422-1.025 7.46-2.9 1.492-1.41 2.57-3.227 3-5.228a.75.75 0 00-.14-.351z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0112 21.75c-3.617 0-6.945-1.428-9.397-3.75a.75.75 0 00-1.04.094A7.534 7.534 0 0012 22.5c2.75 0 5.422-1.025 7.46-2.9 1.492-1.41 2.57-3.227 3-5.228a.75.75 0 00-.14- হট.351z" />
                 </svg>
               )}
             </button>
@@ -120,7 +120,7 @@ const App: React.FC = () => {
                 key={level}
                 onClick={() => handleDifficultyChange(level)}
                 className={`px-4 py-3 rounded-md font-semibold text-center transition-all duration-200 transform hover:scale-105 ${
-                  difficulty === level ? 'bg-[#FFB500] text-[#351C15] shadow-lg' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                  difficulty === level ? 'bg-[#FFB500] text-[#351C15] shadow-lg' : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
                 }`}
               >
                 {label}
